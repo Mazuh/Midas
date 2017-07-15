@@ -3,15 +3,15 @@
 
 Scraping data from [UFRN](http://ufrn.br/) accountability.
 
-The initial idea is for me to learn and pratice data science with Python. My current goal is to see how many professors have salary above the ceiling at this University.
+The initial idea is for me to learn and pratice data science with Python. My current objective is to see how many professors have salary above the ceiling at this University.
 
 ## References
 
 ### For development
 
 Inspired by:
-- professor [Masanori](https://github.com/fmasanori) and [its students project at USP](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that has the same goal as mine; and
-- a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money.
+- professor [Masanori](https://github.com/fmasanori) and [its students project at USP](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that have the same goal as mine; and
+- a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money that is possibly my future goal.
 
 Data sources:
 - http://www.sistemas.ufrn.br/acessoainformacao/
