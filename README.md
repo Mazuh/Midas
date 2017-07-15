@@ -1,9 +1,11 @@
 # Midas
 ## The Data Scrapper King
 
-Scraping data from [UFRN](http://ufrn.br/) accountability.
+Scrapping data from our federal colleges, [UFRN](http://ufrn.br/) and [IFRN](http://portal.ifrn.edu.br/), analysing expenses and producing some cool information for research.
 
-The initial idea is for me to learn and pratice data science with Python. My current objective is to see how many professors have salary above the ceiling at this University.
+Our Constitution, our Law and our People demand [easy access](http://portal.ifrn.edu.br/acessoainformacao/sobre-a-lei-de-acesso-a-informacao-1/apresentacao-da-lei-de-acesso-lai/at_download/file) to this kind of information.
+
+The initial idea is for me to learn and pratice data science with Python. My current objective is to see how many employees have salary above the ceiling. Further, more public expenses will be available for analysis.
 
 ## References
 
@@ -11,11 +13,14 @@ The initial idea is for me to learn and pratice data science with Python. My cur
 
 Inspired by:
 - professor [Masanori](https://github.com/fmasanori) and [its students project at USP](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that have the same goal as mine; and
-- a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money that is possibly my future goal.
+- a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money (may be similar to my future goal).
+
+A related song:
+- "[Ambrosia](https://play.google.com/music/preview/T3glibqusns5cmhzcr6crcnwz34)" by Alesana.
 
 Data sources:
 - http://www.sistemas.ufrn.br/acessoainformacao/
-- http://www.portaldatransparencia.gov.br/servidores/OrgaoExercicio-ListaServidores.asp?CodOS=15000&DescOS=MINISTERIO%20DA%20EDUCACAO&CodOrg=26243&DescOrg=UNIVERSIDADE%20FED.%20DO%20RIO%20GRANDE%20DO%20NORTE&Pagina=1&TextoPesquisa=
+- http://portal.ifrn.edu.br/acessoainformacao/
 
 ### For learning
 
@@ -23,9 +28,9 @@ I'm already comfortable with Python basics and Object Oriented Programming. So t
 - [Python Data Science Handbook](https://github.com/jakevdp/PythonDataScienceHandbook) (free!) by Jake VanderPlas;
 - [Modular Programming Python](https://www.packtpub.com/application-development/modular-programming-python) by Erik Westra.
 
-After reading it all, I'll introduce more features to this project.
+After reading it all, I'll think about more features.
 
-## More about
+## More
 
 ### Mithology
 
