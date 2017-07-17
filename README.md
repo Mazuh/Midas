@@ -3,16 +3,16 @@
 
 Scrapping data from our federal colleges, [UFRN](http://ufrn.br/) and [IFRN](http://portal.ifrn.edu.br/), analysing expenses and producing some cool information for research.
 
-Our Constitution, our Law and our People demand [easy access](http://portal.ifrn.edu.br/acessoainformacao/sobre-a-lei-de-acesso-a-informacao-1/apresentacao-da-lei-de-acesso-lai/at_download/file) to this kind of information.
+Our Constitution, our Law and our People demand [easy access](http://portal.ifrn.edu.br/acessoainformacao/sobre-a-lei-de-acesso-a-informacao-1/apresentacao-da-lei-de-acesso-lai/at_download/file) to this kind of information in an easier way to understand.
 
-The initial idea is for me to learn and pratice data science with Python. My current objective is to see how many employees have salary above the ceiling. Further, more public expenses will be available for analysis.
+The initial idea is for me to learn and pratice data science with Python. My current objective is to compute statistics for government employees salary. Further, more public expenses will be available for analysis.
 
 ## References
 
 ### For development
 
 Inspired by:
-- professor [Masanori](https://github.com/fmasanori) and [its students project at USP](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that have the same goal as mine; and
+- professor [Masanori](https://github.com/fmasanori) and [its students project](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that is a data scrapper for [USP](http://www5.usp.br/) salaries; and
 - a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money (may be similar to my future goal).
 
 A related song:

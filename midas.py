@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup
 
 URL_ROOT_EMPLOYEES = 'http://www.portaldatransparencia.gov.br/servidores/'
 
+INVALID_QUERY_MSG = 'Parâmetros de pesquisa inválidos.'
+
 EMPLOYEES_INTERESTING_DETAILS_TITLES = {
     'organizationalUnit' : 'UORG', # organizational unit
     'employeeSince' : 'Data de publicação', # employee since when?
@@ -34,45 +36,57 @@ def report_employees_init(): # currently only the first page
     Scrapes data from generic search about employees names.
     """
 
-    search_response = urlopen(_employees_search_url(1))
-    search_soup = BeautifulSoup(search_response, 'html.parser')
-
-    employees_table = search_soup.find(id='listagem').find('table')
-    employees_rows = employees_table.find_all('tr')
-    del employees_rows[0]
-
     with open('./reports/all_employees.json', 'w') as all_employees_file:
 
         all_employees_file.write('{\n')
-        index = 0
+        employees_index = 0
+        page_num = 1
+        end = False
 
-        for employees_row in employees_rows:
-            employee = {}
+        while not end:
+            print("Reading page {0}...".format(page_num))
 
-            cpf, name, _ = employees_row.find_all('td')
+            search_response = urlopen(_employees_search_url(page_num))
+            search_soup = BeautifulSoup(search_response, 'html.parser')
 
-            employee['name'] = name.text.title()
-            employee['cpf'] = cpf.text
-            employee['urlDetailsSufix'] = name.find('a').get('href')
+            end = INVALID_QUERY_MSG in search_soup.find(id='conteudo').text
 
-            all_employees_file.write((
-                '  {0}"{1}": {{\n' +\
-                '    "name": "{2}",\n' +\
-                '    "cpf": "{3}",\n' +\
-                '    "urlDetailsSufix": "{4}"\n' +\
-                '  }}\n'
-            ).format(
-                ',' if index else '',
-                index,
-                employee['name'].strip(),
-                employee['cpf'].strip(),
-                employee['urlDetailsSufix'].strip()
-            ))
+            if not end:
 
-            index += 1
+                employees_table = search_soup.find(id='listagem').find('table')
+                employees_rows = employees_table.find_all('tr')
+                del employees_rows[0]
+
+                for employees_row in employees_rows:
+                    employee = {}
+
+                    cpf, name, _ = employees_row.find_all('td')
+
+                    employee['name'] = name.text.title()
+                    employee['cpf'] = cpf.text
+                    employee['urlDetailsSufix'] = name.find('a').get('href')
+
+                    all_employees_file.write((
+                        '  {0}"{1}": {{\n' +\
+                        '    "name": "{2}",\n' +\
+                        '    "cpf": "{3}",\n' +\
+                        '    "urlDetailsSufix": "{4}"\n' +\
+                        '  }}\n'
+                    ).format(
+                        ',' if employees_index else '',
+                        employees_index,
+                        employee['name'].strip(),
+                        employee['cpf'].strip(),
+                        employee['urlDetailsSufix'].strip()
+                    ))
+
+                    employees_index += 1
+
+                page_num += 1
 
         all_employees_file.write('}\n')
 
+    print("Reached the end after {0} pages and {1} employees found.".format(page_num-1, employees_index))
 
 '''
 def report_employees_basic_details():
