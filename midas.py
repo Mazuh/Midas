@@ -12,7 +12,6 @@ import time
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-
 # a lot of useful stuff for beautiful soup to get
 
 URL_ROOT_EMPLOYEES = 'http://www.portaldatransparencia.gov.br/servidores/'
@@ -26,31 +25,23 @@ EMPLOYEES_INTERESTING_DETAILS_TITLES = {
     'situationBond' : 'Situação Vínculo', # exclusive or not? is it an active asset?
 }
 
-EMPLOYEES_CLASS_VALUES_LABELS = {
-    'A': 'Adjunto A / Assistente A / Auxiliar',
-    'B': 'Assistente',
-    'C': 'Adjunto',
-    'D': 'Associado',
-    'E': 'Titular',
-}
-
 # some default values
 
-MAX_CONNECTIONS = 5 # maximum number of requests that may be created at the same time
+#MAX_CONNECTIONS = 5 # maximum number of requests that may be created at the same time
 
 EMPLOYEES_BASICS_FILENAME = './reports/employees_basics.json'
-EMPLOYEES_DETAILS_FILENAMES_MASK = './reports/{0}_employees_details.json' # 0: campus name
+EMPLOYEES_DETAILS_FILENAMES_MASK = './reports/{0}_employees_details.json' # 0: campus without spaces
 
 
 # here we go for the functions
 
-def report_employees_basics(target_employees_basics_filename=EMPLOYEES_BASICS_FILENAME):
+def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME):
     """
     Scrapes data from generic search about employees names and puts them on a given filename.
-    TODO: accept others than just IFRN
+    Should be the initial function to be called before the other employees reports.
     """
 
-    with open(target_employees_basics_filename, 'w') as employees_basics_file:
+    with open(employees_basics_filename, 'w') as employees_basics_file:
 
         employees_basics_file.write('{\n')
         employees_index = 0
@@ -106,15 +97,64 @@ def report_employees_basics(target_employees_basics_filename=EMPLOYEES_BASICS_FI
 
 
 def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME, target_details_filenames_mask=EMPLOYEES_DETAILS_FILENAMES_MASK):
-    #employees_units = {} # key: unit name, value: list of employees dicts
+    """
+    Scrapes details data of each employee and puts them on files based on given filenames mask.
+    The employees should be already stored in a local file based on a given filename param.
+    """
+    opened_files_infos = {} # key: campus name, value: file instance
 
     employees_basics = None
     with open(employees_basics_filename) as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    details = _scrap_employee_details(employees_basics, '11')
-    for detail_key, detail in details.items():
-        print(detail_key + ': ' + str(detail))
+    for i in range(15):
+
+        employee_index = str(i)
+        details = _scrap_employee_details(employees_basics, employee_index)
+
+        print('Reading {0}: {1}...'.format(employee_index, employees_basics[employee_index]['name']))
+
+        if 'CAMPUS' in details['organizationalUnit']:
+            for unit in details['organizationalUnit'].split('/'):
+                if 'CAMPUS' in unit.upper():
+                    details['campus'] = unit.strip()
+        else:
+            details['campus'] = details['organizationalUnit'].split('/')[0].strip()
+
+        first = False
+        if details['campus'] not in opened_files_infos:
+            if 'campus' in details:
+                filename = target_details_filenames_mask.format(details['campus'].replace(' ', '_'))
+            else:
+                filename = target_details_filenames_mask.format('DESCONHECIDO')
+
+            opened_files_infos[details['campus']] = open(filename, 'w')
+            first = True
+            opened_files_infos[details['campus']].write('{\n')
+
+        opened_files_infos[details['campus']].write((
+            '  {0}"{1}": {{\n' +\
+            '    "class": "{2}",\n' +\
+            '    "situationBond": "{3}",\n' +\
+            '    "organizationalUnit": "{4}",\n' +\
+            '    "campus": "{5}",\n' +\
+            '    "hasTrustPosition": "{6}",\n' +\
+            '    "employeeSince": "{7}"\n' +\
+            '  }}\n'
+        ).format(
+            ',' if not first else '',
+            employee_index,
+            details['class'],
+            details['situationBond'],
+            details['organizationalUnit'],
+            details['campus'],
+            details['hasTrustPosition'],
+            details['employeeSince'],
+        ))
+
+    for _, opened_file in opened_files_infos.items():
+        opened_file.write('}\n')
+        opened_file.close()
 
 
 
