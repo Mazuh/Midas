@@ -2,7 +2,6 @@
 Scrapping public information from government about its colleges in Brazil, RN.
 The results will be at report files, in JSON format.
 
-TODO: find all IFRN's professors names by campus.
 TODO: find all IFRN's professors basic details.
 TODO: find all IFRN's professors remunerations.
 """
@@ -113,14 +112,15 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     with open(employees_basics_filename) as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    details = _scrap_employee_details(employees_basics, '0')
+    details = _scrap_employee_details(employees_basics, '11')
     for detail_key, detail in details.items():
-        print(detail_key + ': ' + detail)
+        print(detail_key + ': ' + str(detail))
 
 
 
 
 def _scrap_employee_details(employees_basics: dict, employee_key: str):
+    employee_details = {}
 
     url_details_sufix = employees_basics[employee_key]['urlDetailsSufix']
     name = employees_basics[employee_key]['name']
@@ -128,9 +128,16 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
     details_response = urlopen(_employee_details_url(url_details_sufix))
     details_soup = BeautifulSoup(details_response, 'html.parser')
 
-    details_tbody = details_soup.find('table', summary='Detalhes do Servidor').find('tbody')
+    details_tables = details_soup.find_all('table', summary='Detalhes do Servidor')
+    
+    if len(details_tables) == 2:
+        employee_details['hasTrustPosition'] = True
+        details_table = details_tables[1]
+    else:
+        employee_details['hasTrustPosition'] = False
+        details_table = details_tables[0]
 
-    employee_details = {}
+    details_tbody = details_table.find('tbody')
 
     for details_row in details_tbody.find_all('tr'):
         details_data = details_row.find_all('td')
@@ -141,7 +148,10 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
 
             for interesting_key, interesting_title in EMPLOYEES_INTERESTING_DETAILS_TITLES.items():
                 if interesting_title in title:
-                    employee_details[interesting_key] = content.text
+                    if interesting_key in employee_details:
+                        employee_details[interesting_key] += ' / ' + content.text.strip()
+                    else:
+                        employee_details[interesting_key] = content.text.strip()
 
     return employee_details if employee_details else None
 
