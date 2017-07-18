@@ -7,9 +7,14 @@ TODO: find all IFRN's professors basic details.
 TODO: find all IFRN's professors remunerations.
 """
 
+import json
+import time
+
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
+
+# a lot of useful stuff for beautiful soup to get
 
 URL_ROOT_EMPLOYEES = 'http://www.portaldatransparencia.gov.br/servidores/'
 
@@ -30,15 +35,25 @@ EMPLOYEES_CLASS_VALUES_LABELS = {
     'E': 'Titular',
 }
 
+# some default values
 
-def report_employees_init(): # currently only the first page
+MAX_CONNECTIONS = 5 # maximum number of requests that may be created at the same time
+
+EMPLOYEES_BASICS_FILENAME = './reports/employees_basics.json'
+EMPLOYEES_DETAILS_FILENAMES_MASK = './reports/{0}_employees_details.json' # 0: campus name
+
+
+# here we go for the functions
+
+def report_employees_basics(target_employees_basics_filename=EMPLOYEES_BASICS_FILENAME):
     """
-    Scrapes data from generic search about employees names.
+    Scrapes data from generic search about employees names and puts them on a given filename.
+    TODO: accept others than just IFRN
     """
 
-    with open('./reports/all_employees.json', 'w') as all_employees_file:
+    with open(target_employees_basics_filename, 'w') as employees_basics_file:
 
-        all_employees_file.write('{\n')
+        employees_basics_file.write('{\n')
         employees_index = 0
         page_num = 1
         end = False
@@ -66,7 +81,7 @@ def report_employees_init(): # currently only the first page
                     employee['cpf'] = cpf.text
                     employee['urlDetailsSufix'] = name.find('a').get('href')
 
-                    all_employees_file.write((
+                    employees_basics_file.write((
                         '  {0}"{1}": {{\n' +\
                         '    "name": "{2}",\n' +\
                         '    "cpf": "{3}",\n' +\
@@ -84,55 +99,58 @@ def report_employees_init(): # currently only the first page
 
                 page_num += 1
 
-        all_employees_file.write('}\n')
+        employees_basics_file.write('}\n')
 
     print("Reached the end after {0} pages and {1} employees found.".format(page_num-1, employees_index))
 
-'''
-def report_employees_basic_details():
-    """
-    Scrapes data from generic search about employees common details and organize them by campus.
-    The result will be at report files.
-    """
 
-    search_response = urlopen(_employees_search_url(1))
-    search_soup = BeautifulSoup(search_response, 'html.parser')
 
-    employees_table = search_soup.find(id='listagem').find('table')
-    employees_rows = employees_table.find_all('tr')
-    del employees_rows[0]
 
-    for employees_row in employees_rows:
-        employee = {}
+def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME, target_details_filenames_mask=EMPLOYEES_DETAILS_FILENAMES_MASK):
+    #employees_units = {} # key: unit name, value: list of employees dicts
 
-        cpf, name, _ = employees_row.find_all('td')
+    employees_basics = None
+    with open(employees_basics_filename) as employees_basics_file:
+        employees_basics = json.loads(employees_basics_file.read())
 
-        employee['name'] = name.text.title()
-        employee['cpf'] = cpf.text
+    details = _scrap_employee_details(employees_basics, '0')
+    for detail_key, detail in details.items():
+        print(detail_key + ': ' + detail)
 
-        url_details_sufix = name.find('a').get('href')
 
-        employee_response = urlopen(_employee_details_url(url_details_sufix))
-        employee_soup = BeautifulSoup(employee_response, 'html.parser')
-        details_tbody = employee_soup.find('table', summary='Detalhes do Servidor').find('tbody')
+
+
+def _scrap_employee_details(employees_basics: dict, employee_key: str):
+
+    url_details_sufix = employees_basics[employee_key]['urlDetailsSufix']
+    name = employees_basics[employee_key]['name']
+
+    details_response = urlopen(_employee_details_url(url_details_sufix))
+    details_soup = BeautifulSoup(details_response, 'html.parser')
+
+    details_tbody = details_soup.find('table', summary='Detalhes do Servidor').find('tbody')
+
+    employee_details = {}
+
+    for details_row in details_tbody.find_all('tr'):
+        details_data = details_row.find_all('td')
         
-        for details_row in details_tbody:
-            title, content = details_row.find('td')
+        if len(details_data) == 2:
+            title, content = details_data
             title = title.text
-            for interest_key, interest_title in EMPLOYEES_INTERESTING_DETAILS_TITLES.items():
-                if interest_title in title:
-                    employee[interest_key] = content.text
-        
-        days_file = open(, 'a')
-'''
+
+            for interesting_key, interesting_title in EMPLOYEES_INTERESTING_DETAILS_TITLES.items():
+                if interesting_title in title:
+                    employee_details[interesting_key] = content.text
+
+    return employee_details if employee_details else None
+
+
 
 
 def report_employees_remunerations():
-    """
-    It needs employees basic details.
-    TODO
-    """
     pass
+
 
 
 
@@ -142,14 +160,12 @@ def _employees_search_url(page_num: int):
 
 
 
+
 def _employee_details_url(url_sufix: str):
     return URL_ROOT_EMPLOYEES + url_sufix
 
 
+# routines
 
-def _employee_remuneration_url(url_sufix: str):
-    pass
-    #return URL_ROOT_EMPLOYEES + 'http://www.portaldatransparencia.gov.br/servidores/Servidor-DetalhaRemuneracao.asp?Op=2&IdServidor=2140100&CodOrgao=26435&CodOS=15000&bInformacaoFinanceira=True'
-
-
-report_employees_init()
+#report_employees_basics()
+report_employees_details()
