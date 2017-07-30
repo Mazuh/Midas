@@ -7,6 +7,7 @@ TODO: find all IFRN's professors remunerations.
 """
 
 import json
+import threading
 import time
 
 from urllib.request import urlopen
@@ -46,17 +47,17 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
         employees_basics_file.write('{\n')
         employees_index = 0
         page_num = 1
-        end = False
+        ended_querying_all_pages = False
 
-        while not end:
+        while not ended_querying_all_pages:
             print("Reading page {0}...".format(page_num))
 
             search_response = urlopen(_employees_search_url(page_num))
             search_soup = BeautifulSoup(search_response, 'html.parser')
 
-            end = INVALID_QUERY_MSG in search_soup.find(id='conteudo').text
+            ended_querying_all_pages = INVALID_QUERY_MSG in search_soup.find(id='conteudo').text
 
-            if not end:
+            if not ended_querying_all_pages:
 
                 employees_table = search_soup.find(id='listagem').find('table')
                 employees_rows = employees_table.find_all('tr')
@@ -96,7 +97,8 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
 
 
 
-def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME, target_details_filenames_mask=EMPLOYEES_DETAILS_FILENAMES_MASK):
+def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME,
+                             target_details_filenames_mask=EMPLOYEES_DETAILS_FILENAMES_MASK):
     """
     Scrapes details data of each employee and puts them on files based on given filenames mask.
     The employees should be already stored in a local file based on a given filename param.
@@ -107,7 +109,7 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     with open(employees_basics_filename) as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    for i in range(15):
+    for i in range(1):
 
         employee_index = str(i)
         details = _scrap_employee_details(employees_basics, employee_index)
@@ -139,7 +141,8 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
             '    "organizationalUnit": "{4}",\n' +\
             '    "campus": "{5}",\n' +\
             '    "hasTrustPosition": "{6}",\n' +\
-            '    "employeeSince": "{7}"\n' +\
+            '    "employeeSince": "{7}",\n' +\
+            '    "urlRemunerationSufix": "{8}"\n' +\
             '  }}\n'
         ).format(
             ',' if not first else '',
@@ -148,8 +151,9 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
             details['situationBond'],
             details['organizationalUnit'],
             details['campus'],
-            details['hasTrustPosition'],
+            '1' if details['hasTrustPosition'] else '0',
             details['employeeSince'],
+            details['urlRemunerationSufix']
         ))
 
     for _, opened_file in opened_files_infos.items():
@@ -163,10 +167,19 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
     employee_details = {}
 
     url_details_sufix = employees_basics[employee_key]['urlDetailsSufix']
-    name = employees_basics[employee_key]['name']
 
     details_response = urlopen(_employee_details_url(url_details_sufix))
     details_soup = BeautifulSoup(details_response, 'html.parser')
+
+    # get its link for $$$
+
+    remuneration_url_sufix = details_soup.find('a', title='Remuneração individual do servidor').get('href')
+    if remuneration_url_sufix[:12] == '/servidores/':
+        remuneration_url_sufix = remuneration_url_sufix[12:]
+
+    employee_details['urlRemunerationSufix'] = remuneration_url_sufix
+
+    # scrapes more details for its profile
 
     details_tables = details_soup.find_all('table', summary='Detalhes do Servidor')
     
