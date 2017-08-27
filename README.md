@@ -19,6 +19,7 @@ After cloning the repository, I changed directory to it and ran:
 
 ```
 virtualenv .
+source ./bin/activate
 pip install -r ./requirements.txt
 ```
 
