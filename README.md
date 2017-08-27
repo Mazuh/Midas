@@ -15,7 +15,7 @@ The initial idea is for me to learn and practice data science with Python and R.
 
 Inspired by:
 - professor [Masanori](https://github.com/fmasanori) and [its students project](https://gist.github.com/fmasanori/6ae7d880da86b61b5f2736da0f341376) that is a data scraper for [USP](http://www5.usp.br/) salaries;
-- An [NPI/UFRC](https://github.com/npi-ufc-qxd) project named [Dados Abertos](https://github.com/npi-ufc-qxd/dados-abertos) producing [general statistics about federal data](https://crislanio.wordpress.com/2017/06/02/analise-dos-dados-abertos-do-governo-federal/);
+- an [NPI/UFC](https://github.com/npi-ufc-qxd) project named [Dados Abertos](https://github.com/npi-ufc-qxd/dados-abertos) producing [general statistics about federal data](https://crislanio.wordpress.com/2017/06/02/analise-dos-dados-abertos-do-governo-federal/); and
 - a [Data Science Brigade](https://github.com/datasciencebr) project called [Serenata de Amor](https://github.com/datasciencebr/serenata-de-amor) for monitoring congressmen expenses using public money (may be similar to my future goal).
 
 A related song:
