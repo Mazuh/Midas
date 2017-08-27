@@ -1,8 +1,8 @@
+#!/usr/bin/env python
 """
 Scrapping public information from government about its colleges in Brazil, RN.
 The results will be at report files, in JSON format.
 
-TODO: find all IFRN's professors basic details.
 TODO: find all IFRN's professors remunerations.
 """
 
@@ -12,7 +12,6 @@ import csv
 
 import threading
 from queue import Queue
-from io import TextIOWrapper
 
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -96,7 +95,8 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
 
         employees_basics_file.write('}\n')
 
-    print('Reached the end after {0} pages and {1} employees found.'.format(page_num-1, employees_index))
+    print('Reached the end after {0} pages and {1} employees found.'
+          .format(page_num-1, employees_index))
 
 
 
@@ -104,8 +104,9 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
 def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME,
                              target_details_ds_filename=EMPLOYEES_DETAILS_DS_FILENAME):
     """
-    Scrapes details data of each employee and puts them on files based on given filenames mask.
-    The employees should be already stored in a local file based on a given filename param.
+    Scrapes details data of each employee and puts them on a csv file.
+    The employees basics list should be already stored in a
+    local file based on a given filename param.
     """
     # ready...
     employees_basics = None
@@ -165,7 +166,9 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str, ds_writer
 
     # get its link for $$$
 
-    remuneration_url_sufix = details_soup.find('a', title='Remuneração individual do servidor').get('href')
+    remuneration_url_sufix = (details_soup
+                              .find('a', title='Remuneração individual do servidor')
+                              .get('href'))
     if remuneration_url_sufix[:12] == '/servidores/':
         remuneration_url_sufix = remuneration_url_sufix[12:]
 
@@ -240,4 +243,5 @@ def _employee_details_url(url_sufix: str):
 # routines
 
 #report_employees_basics()
-report_employees_details()
+#report_employees_details()
+print('hello there')
