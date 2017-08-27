@@ -7,7 +7,7 @@ Scrapping data from our federal colleges, [UFRN](http://ufrn.br/) and [IFRN](htt
 
 Our Constitution, our Law and our People demand [easy access](http://portal.ifrn.edu.br/acessoainformacao/sobre-a-lei-de-acesso-a-informacao-1/apresentacao-da-lei-de-acesso-lai/at_download/file) to this kind of information in an easier way to understand.
 
-The initial idea is for me to learn and pratice data science with Python. My current objective is to compute statistics for government employees salary. Further, more public expenses will be available for analysis.
+The initial idea is for me to learn and practice data science with Python and R. My **current objective** is to compute statistics for government employees salary. Further, more public expenses will be available for analysis.
 
 ## References
 
