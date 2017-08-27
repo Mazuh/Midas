@@ -1,5 +1,6 @@
 # Output files
 reports/*.json
+reports/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -85,10 +86,18 @@ celerybeat-schedule
 # dotenv
 .env
 
-# virtualenv
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
 .venv
-venv/
-ENV/
+pip-selfcheck.json
 
 # Spyder project settings
 .spyderproject

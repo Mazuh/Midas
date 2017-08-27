@@ -7,8 +7,12 @@ TODO: find all IFRN's professors remunerations.
 """
 
 import json
-import threading
 import time
+import csv
+
+from threading import Thread
+from queue import Queue
+from io import TextIOWrapper
 
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -28,10 +32,10 @@ EMPLOYEES_INTERESTING_DETAILS_TITLES = {
 
 # some default values
 
-#MAX_CONNECTIONS = 5 # maximum number of requests that may be created at the same time
+MAX_HTTP_CONNECTIONS = 6 # maximum number of http threads at the same time
 
 EMPLOYEES_BASICS_FILENAME = './reports/employees_basics.json'
-EMPLOYEES_DETAILS_FILENAMES_MASK = './reports/{0}_employees_details.json' # 0: campus without spaces
+EMPLOYEES_DETAILS_DS_FILENAME = './reports/ifrn_employees_details.csv'
 
 
 # here we go for the functions
@@ -98,67 +102,78 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
 
 
 def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME,
-                             target_details_filenames_mask=EMPLOYEES_DETAILS_FILENAMES_MASK):
+                             target_details_ds_filename=EMPLOYEES_DETAILS_DS_FILENAME):
     """
     Scrapes details data of each employee and puts them on files based on given filenames mask.
     The employees should be already stored in a local file based on a given filename param.
     """
-    opened_files_infos = {} # key: campus name, value: file instance
-
     employees_basics = None
-    with open(employees_basics_filename) as employees_basics_file:
+    with open(employees_basics_filename, 'r') as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    for i in range(1):
+    #scrapping_threads_q = Queue()
 
-        employee_index = str(i)
-        details = _scrap_employee_details(employees_basics, employee_index)
+    with open(target_details_ds_filename, 'w', newline='') as details_ds_file:
+        csvwriter = csv.DictWriter(details_ds_file, fieldnames=[
+            'index',
+            'campus',
+            'class',
+            'situationBond',
+            'organizationalUnit',
+            'campus',
+            'hasTrustPosition',
+            'employeeSince',
+            'urlRemunerationSufix'
+        ])
 
-        print('Reading {0}: {1}...'.format(employee_index, employees_basics[employee_index]['name']))
+        csvwriter.writeheader()
 
-        if 'CAMPUS' in details['organizationalUnit']:
-            for unit in details['organizationalUnit'].split('/'):
-                if 'CAMPUS' in unit.upper():
-                    details['campus'] = unit.strip()
-        else:
-            details['campus'] = details['organizationalUnit'].split('/')[0].strip()
+        """
+        for employee_index in employees_basics:
+            scrapping_threads_q.put(Thread(
+                target=_scrap_employee_details,
+                args=(employees_basics, employee_index, details_ds_file)
+            ))
 
-        first = False
-        if details['campus'] not in opened_files_infos:
-            if 'campus' in details:
-                filename = target_details_filenames_mask.format(details['campus'].replace(' ', '_'))
+        active_scrapping_threads = []
+        for i in range(MAX_HTTP_CONNECTIONS):
+            active_scrapping_threads[i] = None
+
+        while not scrapping_threads_q.empty():
+            for i in range(MAX_HTTP_CONNECTIONS):
+
+                if active_scrapping_threads[i] is None:
+                    if not scrapping_threads_q.empty():
+                        active_scrapping_threads[i] = scrapping_threads_q.get()
+
+                if active_scrapping_threads[i] is not None:
+                    if not active_scrapping_threads[i].is_alive():
+                        active_scrapping_threads[i].start()
+
+            time.sleep(1)
+
+        if scrapping_threads_q.empty():
+            print("Todas as requisições foram feitas.")
+        """
+        for i in range(3):
+
+            employee_index = str(i)
+            details = _scrap_employee_details(employees_basics, employee_index)
+
+            print('Reading {}: {}...'.format(employee_index, employees_basics[employee_index]['name']))
+            details['index'] = employee_index
+
+            if 'CAMPUS' in details['organizationalUnit']:
+                for unit in details['organizationalUnit'].split('/'):
+                    if 'CAMPUS' in unit.upper():
+                        details['campus'] = unit.strip()
             else:
-                filename = target_details_filenames_mask.format('DESCONHECIDO')
+                details['campus'] = details['organizationalUnit'].split('/')[0].strip()
 
-            opened_files_infos[details['campus']] = open(filename, 'w')
-            first = True
-            opened_files_infos[details['campus']].write('{\n')
+            if 'campus' not in details:
+                details['campus'] = ''
 
-        opened_files_infos[details['campus']].write((
-            '  {0}"{1}": {{\n' +\
-            '    "class": "{2}",\n' +\
-            '    "situationBond": "{3}",\n' +\
-            '    "organizationalUnit": "{4}",\n' +\
-            '    "campus": "{5}",\n' +\
-            '    "hasTrustPosition": "{6}",\n' +\
-            '    "employeeSince": "{7}",\n' +\
-            '    "urlRemunerationSufix": "{8}"\n' +\
-            '  }}\n'
-        ).format(
-            ',' if not first else '',
-            employee_index,
-            details['class'],
-            details['situationBond'],
-            details['organizationalUnit'],
-            details['campus'],
-            '1' if details['hasTrustPosition'] else '0',
-            details['employeeSince'],
-            details['urlRemunerationSufix']
-        ))
-
-    for _, opened_file in opened_files_infos.items():
-        opened_file.write('}\n')
-        opened_file.close()
+            csvwriter.writerow(details)
 
 
 
@@ -182,7 +197,7 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
     # scrapes more details for its profile
 
     details_tables = details_soup.find_all('table', summary='Detalhes do Servidor')
-    
+
     if len(details_tables) == 2:
         employee_details['hasTrustPosition'] = True
         details_table = details_tables[1]
@@ -194,7 +209,7 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
 
     for details_row in details_tbody.find_all('tr'):
         details_data = details_row.find_all('td')
-        
+
         if len(details_data) == 2:
             title, content = details_data
             title = title.text
