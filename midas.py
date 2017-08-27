@@ -10,7 +10,7 @@ import json
 import time
 import csv
 
-from threading import Thread
+import threading
 from queue import Queue
 from io import TextIOWrapper
 
@@ -54,7 +54,7 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
         ended_querying_all_pages = False
 
         while not ended_querying_all_pages:
-            print("Reading page {0}...".format(page_num))
+            print('Reading page {0}...'.format(page_num))
 
             search_response = urlopen(_employees_search_url(page_num))
             search_soup = BeautifulSoup(search_response, 'html.parser')
@@ -96,7 +96,7 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
 
         employees_basics_file.write('}\n')
 
-    print("Reached the end after {0} pages and {1} employees found.".format(page_num-1, employees_index))
+    print('Reached the end after {0} pages and {1} employees found.'.format(page_num-1, employees_index))
 
 
 
@@ -107,11 +107,10 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     Scrapes details data of each employee and puts them on files based on given filenames mask.
     The employees should be already stored in a local file based on a given filename param.
     """
+    # ready...
     employees_basics = None
     with open(employees_basics_filename, 'r') as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
-
-    scrapping_threads_q = Queue()
 
     with open(target_details_ds_filename, 'w', newline='') as details_ds_file:
         ds_writer = csv.DictWriter(details_ds_file, fieldnames=[
@@ -129,44 +128,31 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
         ])
 
         ds_writer.writeheader()
-        """
+
         # aim...
+        scrapers_q = Queue()
 
         for employee_index in employees_basics:
-            scrapping_threads_q.put(Thread(
+            scrapers_q.put(threading.Thread(
                 target=_scrap_employee_details,
-                args=(employees_basics, employee_index, details_ds_file)
+                args=(employees_basics, employee_index, ds_writer)
             ))
 
-        # ready...
-
-        active_scrapping_threads = []
-        for i in range(MAX_HTTP_CONNECTIONS):
-            active_scrapping_threads[i] = None
-
         # fire!
+        while not scrapers_q.empty():
+            if threading.active_count() == 1:
+                for _ in range(MAX_HTTP_CONNECTIONS):
+                    if not scrapers_q.empty():
+                        scrapers_q.get().start()
+            else:
+                time.sleep(1)
 
-        while not scrapping_threads_q.empty():
-            for i in range(MAX_HTTP_CONNECTIONS):
-
-                if active_scrapping_threads[i] is None:
-                    if not scrapping_threads_q.empty():
-                        active_scrapping_threads[i] = scrapping_threads_q.get()
-
-                if active_scrapping_threads[i] is not None:
-                    if not active_scrapping_threads[i].is_alive():
-                        active_scrapping_threads[i].start()
-
+        while threading.active_count() != 1:
+            print('Waiting for remaining requests...')
             time.sleep(1)
 
-        if scrapping_threads_q.empty():
-            print("Todas as requisições foram feitas.")
-        
-        """
-        for i in range(3):
-            employee_index = str(i)
-            _scrap_employee_details(employees_basics, employee_index, ds_writer)
-        
+        print('Done. Dataset as CSV successfully assembled.')
+
 
 
 
