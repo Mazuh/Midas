@@ -111,11 +111,13 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     with open(employees_basics_filename, 'r') as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    #scrapping_threads_q = Queue()
+    scrapping_threads_q = Queue()
 
     with open(target_details_ds_filename, 'w', newline='') as details_ds_file:
         ds_writer = csv.DictWriter(details_ds_file, fieldnames=[
             'index',
+            'name',
+            'cpf',
             'campus',
             'class',
             'situationBond',
@@ -127,17 +129,22 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
         ])
 
         ds_writer.writeheader()
-
         """
+        # aim...
+
         for employee_index in employees_basics:
             scrapping_threads_q.put(Thread(
                 target=_scrap_employee_details,
                 args=(employees_basics, employee_index, details_ds_file)
             ))
 
+        # ready...
+
         active_scrapping_threads = []
         for i in range(MAX_HTTP_CONNECTIONS):
             active_scrapping_threads[i] = None
+
+        # fire!
 
         while not scrapping_threads_q.empty():
             for i in range(MAX_HTTP_CONNECTIONS):
@@ -154,11 +161,12 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
 
         if scrapping_threads_q.empty():
             print("Todas as requisições foram feitas.")
+        
         """
         for i in range(3):
             employee_index = str(i)
             _scrap_employee_details(employees_basics, employee_index, ds_writer)
-
+        
 
 
 
@@ -208,6 +216,8 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str, ds_writer
 
     print('Reading {}: {}...'.format(employee_key, employees_basics[employee_key]['name']))
     employee_details['index'] = employee_key
+    employee_details['name'] = employees_basics[employee_key]['name']
+    employee_details['cpf'] = employees_basics[employee_key]['cpf']
 
     if 'CAMPUS' in employee_details['organizationalUnit']:
         for unit in employee_details['organizationalUnit'].split('/'):
