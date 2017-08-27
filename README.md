@@ -9,6 +9,28 @@ Our Constitution, our Law and our People demand [easy access](http://portal.ifrn
 
 The initial idea is for me to learn and practice data science with Python and R. My **current objective** is to compute statistics for government employees salary. Further, more public expenses will be available for analysis.
 
+## Installing
+
+### Scraper
+
+Did it on my Ubuntu 17 with ```python3``` (3.5), ```pip``` and ```virtualenv``` (from ```pip3```) installed.
+
+After cloning the repository, I changed directory to it and ran:
+
+```
+virtualenv .
+pip install -r ./requirements.txt
+```
+
+Read at the end of ```midas_scraper.py``` file which functions are being called. For a first installation,
+there must be all of them not-commented. To run it:
+
+```
+./midas_scraper.py
+```
+
+That's it. Since there's no relase version yet, be careful with what you're doing and try to understand the code first.
+
 ## References
 
 ### For development
