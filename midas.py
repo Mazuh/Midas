@@ -114,7 +114,7 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     #scrapping_threads_q = Queue()
 
     with open(target_details_ds_filename, 'w', newline='') as details_ds_file:
-        csvwriter = csv.DictWriter(details_ds_file, fieldnames=[
+        ds_writer = csv.DictWriter(details_ds_file, fieldnames=[
             'index',
             'campus',
             'class',
@@ -126,7 +126,7 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
             'urlRemunerationSufix'
         ])
 
-        csvwriter.writeheader()
+        ds_writer.writeheader()
 
         """
         for employee_index in employees_basics:
@@ -156,33 +156,16 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
             print("Todas as requisições foram feitas.")
         """
         for i in range(3):
-
             employee_index = str(i)
-            details = _scrap_employee_details(employees_basics, employee_index)
-
-            print('Reading {}: {}...'.format(employee_index, employees_basics[employee_index]['name']))
-            details['index'] = employee_index
-
-            if 'CAMPUS' in details['organizationalUnit']:
-                for unit in details['organizationalUnit'].split('/'):
-                    if 'CAMPUS' in unit.upper():
-                        details['campus'] = unit.strip()
-            else:
-                details['campus'] = details['organizationalUnit'].split('/')[0].strip()
-
-            if 'campus' not in details:
-                details['campus'] = ''
-
-            csvwriter.writerow(details)
+            _scrap_employee_details(employees_basics, employee_index, ds_writer)
 
 
 
 
-def _scrap_employee_details(employees_basics: dict, employee_key: str):
+def _scrap_employee_details(employees_basics: dict, employee_key: str, ds_writer: csv.DictWriter):
     employee_details = {}
 
     url_details_sufix = employees_basics[employee_key]['urlDetailsSufix']
-
     details_response = urlopen(_employee_details_url(url_details_sufix))
     details_soup = BeautifulSoup(details_response, 'html.parser')
 
@@ -221,7 +204,22 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str):
                     else:
                         employee_details[interesting_key] = content.text.strip()
 
-    return employee_details if employee_details else None
+    # trying to write data on dataset
+
+    print('Reading {}: {}...'.format(employee_key, employees_basics[employee_key]['name']))
+    employee_details['index'] = employee_key
+
+    if 'CAMPUS' in employee_details['organizationalUnit']:
+        for unit in employee_details['organizationalUnit'].split('/'):
+            if 'CAMPUS' in unit.upper():
+                employee_details['campus'] = unit.strip()
+    else:
+        employee_details['campus'] = employee_details['organizationalUnit'].split('/')[0].strip()
+
+    if 'campus' not in employee_details:
+        employee_details['campus'] = ''
+
+    ds_writer.writerow(employee_details)
 
 
 
