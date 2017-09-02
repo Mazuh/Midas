@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Scrapping public information from government about its colleges in Brazil, RN.
-The results will be at report files, in JSON format.
+The results will be at report files, in JSON and CSV format.
 
 TODO: find all IFRN's professors remunerations.
 """
@@ -9,9 +9,10 @@ TODO: find all IFRN's professors remunerations.
 import json
 import time
 import csv
-
 import threading
+
 from queue import Queue
+from datetime import datetime
 
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -33,8 +34,9 @@ EMPLOYEES_INTERESTING_DETAILS_TITLES = {
 
 MAX_HTTP_CONNECTIONS = 6 # maximum number of http threads at the same time
 
-EMPLOYEES_BASICS_FILENAME = './reports/employees_basics.json'
-EMPLOYEES_DETAILS_DS_FILENAME = './reports/ifrn_employees_details.csv'
+# masks to .format() and insert a date as YYMMDD
+EMPLOYEES_BASICS_FILENAME = './reports/{}_ifrn_employees_basics_search.json'
+EMPLOYEES_DETAILS_DS_FILENAME = './reports/{}_ifrn_employees_details.csv'
 
 
 # here we go for the functions
@@ -45,7 +47,7 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
     Should be the initial function to be called before the other employees reports.
     """
 
-    with open(employees_basics_filename, 'w') as employees_basics_file:
+    with open(employees_basics_filename.format(_time_now_str()), 'w') as employees_basics_file:
 
         employees_basics_file.write('{\n')
         employees_index = 0
@@ -110,10 +112,10 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     """
     # ready...
     employees_basics = None
-    with open(employees_basics_filename, 'r') as employees_basics_file:
+    with open(employees_basics_filename.format(_time_now_str()), 'r') as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    with open(target_details_ds_filename, 'w', newline='') as details_ds_file:
+    with open(target_details_ds_filename.format(_time_now_str()), 'w', newline='') as details_ds_file:
         ds_writer = csv.DictWriter(details_ds_file, fieldnames=[
             'index',
             'name',
@@ -240,8 +242,18 @@ def _employee_details_url(url_sufix: str):
     return URL_ROOT_EMPLOYEES + url_sufix
 
 
-# routines
 
-#report_employees_basics()
-#report_employees_details()
+
+def _time_now_str():
+    today = datetime.today()
+    year = str(today.year)[2:]
+    month = str(today.month) if today.month > 9 else '0'+str(today.month)
+    day = str(today.day) if today.day > 9 else '0'+str(today.day)
+    return year + month + day
+
+
+
+# routines
+report_employees_basics()
+report_employees_details()
 print('hello there')
