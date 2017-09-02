@@ -47,7 +47,7 @@ def report_employees_basics(employees_basics_filename=EMPLOYEES_BASICS_FILENAME)
     Should be the initial function to be called before the other employees reports.
     """
 
-    with open(employees_basics_filename.format(_time_now_str()), 'w') as employees_basics_file:
+    with open(employees_basics_filename.format(_time()), 'w') as employees_basics_file:
 
         employees_basics_file.write('{\n')
         employees_index = 0
@@ -112,10 +112,10 @@ def report_employees_details(employees_basics_filename=EMPLOYEES_BASICS_FILENAME
     """
     # ready...
     employees_basics = None
-    with open(employees_basics_filename.format(_time_now_str()), 'r') as employees_basics_file:
+    with open(employees_basics_filename.format(_time()), 'r') as employees_basics_file:
         employees_basics = json.loads(employees_basics_file.read())
 
-    with open(target_details_ds_filename.format(_time_now_str()), 'w', newline='') as details_ds_file:
+    with open(target_details_ds_filename.format(_time()), 'w', newline='') as details_ds_file:
         ds_writer = csv.DictWriter(details_ds_file, fieldnames=[
             'index',
             'name',
@@ -225,7 +225,16 @@ def _scrap_employee_details(employees_basics: dict, employee_key: str, ds_writer
 
 
 
-def report_employees_remunerations():
+def report_employees_remunerations(employees_details_ds_filename=EMPLOYEES_BASICS_FILENAME,
+                                   target_details_salary_ds_filename=EMPLOYEES_DETAILS_DS_FILENAME,
+                                   year=None,
+                                   month=None):
+    """
+    Scrapes salary data of each employee and puts them on a csv file, including
+    previously scraped datails.
+    The employees details dataset should be already stored in a
+    local file based on a given filename param.
+    """
     pass
 
 
@@ -244,16 +253,15 @@ def _employee_details_url(url_sufix: str):
 
 
 
-def _time_now_str():
-    today = datetime.today()
-    year = str(today.year)[2:]
-    month = str(today.month) if today.month > 9 else '0'+str(today.month)
-    day = str(today.day) if today.day > 9 else '0'+str(today.day)
-    return year + month + day
+def _time(year=datetime.today().year, month=datetime.today().month):
+    year = str(year)[2:]
+    month = str(month) if month > 9 else '0'+str(month)
+    return year + month
 
 
 
-# routines
+# routine
+print('Hello there.')
 report_employees_basics()
 report_employees_details()
-print('hello there')
+report_employees_remunerations()
